@@ -1,0 +1,123 @@
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <limits.h>
+
+#define MAX 100
+
+typedef struct Nd {
+    int v;
+    int w;
+    struct Nd* nxt;
+} Nd;
+
+typedef struct {
+    Nd* hd;
+} Lst;
+
+typedef struct {
+    int v;
+    int g;
+    int h;
+    int f;
+} ANode;
+
+Lst gph[MAX];
+int vis[MAX];
+int h_val[MAX];
+int n;
+
+Nd* new_nd(int v, int w) {
+    Nd* nd = (Nd*)malloc(sizeof(Nd));
+    nd->v = v;
+    nd->w = w;
+    nd->nxt = NULL;
+    return nd;
+}
+
+ANode min_f(ANode open[], int sz) {
+    ANode min_nd = open[0];
+    int min_idx = 0;
+    for (int i = 1; i < sz; i++) {
+        if (open[i].f < min_nd.f) {
+            min_nd = open[i];
+            min_idx = i;
+        }
+    }
+
+    for (int i = min_idx; i < sz - 1; i++) {
+        open[i] = open[i + 1];
+    }
+
+    return min_nd;
+}
+
+void add_edg(int src, int dest, int w) {
+    Nd* nd = new_nd(dest, w);
+    nd->nxt = gph[src].hd;
+    gph[src].hd = nd;
+
+    nd = new_nd(src, w);
+    nd->nxt = gph[dest].hd;
+    gph[dest].hd = nd;
+}
+
+int main() {
+    int st, gl, i, e, src, dest, w;
+    printf("Enter number of nodes: ");
+    scanf("%d", &n);
+
+    for (i = 0; i < n; i++) {
+        gph[i].hd = NULL;
+        vis[i] = 0;
+    }
+
+    printf("Enter number of edges: ");
+    scanf("%d", &e);
+
+    printf("Enter edges (source dest wt):\n");
+    for (i = 0; i < e; i++) {
+        scanf("%d %d %d", &src, &dest, &w);
+        add_edg(src, dest, w);
+    }
+
+    printf("Enter heuristic values for each node:\n");
+    for (i = 0; i < n; i++) {
+        printf("Heuristic for node %d: ", i);
+        scanf("%d", &h_val[i]);
+    }
+
+    printf("Enter start node: ");
+    scanf("%d", &st);
+    printf("Enter goal node: ");
+    scanf("%d", &gl);
+
+    ANode open[MAX];
+    int o_sz = 0;
+    ANode st_nd = {st, 0, h_val[st], h_val[st]};
+    open[o_sz++] = st_nd;
+
+    while (o_sz > 0) {
+        ANode cur = min_f(open, o_sz--);
+
+        if (cur.v == gl) {
+            printf("Cost: %d\n", cur.g);
+            return 0;
+        }
+
+        Nd* tmp = gph[cur.v].hd;
+        while (tmp) {
+            if (!vis[tmp->v]) {
+                ANode n = {tmp->v, cur.g + tmp->w, h_val[tmp->v], 0};
+                n.f = n.g + n.h;
+                open[o_sz++] = n;
+            }
+            tmp = tmp->nxt;
+        }
+
+        vis[cur.v] = 1;
+    }
+
+    printf("Goal not reachable\n");
+    return 0;
+}

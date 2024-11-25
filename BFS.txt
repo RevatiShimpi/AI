@@ -1,0 +1,247 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+struct Node {
+    int dest;
+    struct Node* next;
+};
+
+struct Graph {
+    int V;
+    struct Node** adj;
+};
+
+struct Node* createNode(int v) {
+    struct Node* newNode = (struct Node*)malloc(sizeof(struct Node));
+    newNode->dest = v;
+    newNode->next = NULL;
+    return newNode;
+}
+
+struct Graph* createGraph(int V) {
+    struct Graph* graph = (struct Graph*)malloc(sizeof(struct Graph));
+    graph->V = V;
+    graph->adj = (struct Node**)malloc(V * sizeof(struct Node*));
+    for (int i = 0; i < V; ++i)
+        graph->adj[i] = NULL;
+    return graph;
+}
+
+void addEdge(struct Graph* graph, int src, int dest) {
+    struct Node* newNode = createNode(dest);
+    newNode->next = graph->adj[src];
+    graph->adj[src] = newNode;
+}
+
+void bfs(struct Graph* graph, int start) {
+    int* visited = (int*)malloc(graph->V * sizeof(int));
+    for (int i = 0; i < graph->V; ++i)
+        visited[i] = 0;
+
+    int* queue = (int*)malloc(graph->V * sizeof(int));
+    int front = 0, rear = 0;
+
+    visited[start] = 1;
+    queue[rear++] = start;
+
+    while (front < rear) {
+        int curr = queue[front++];
+        printf("%d ", curr);
+
+        struct Node* temp = graph->adj[curr];
+        while (temp) {
+            int adjVertex = temp->dest;
+            if (!visited[adjVertex]) {
+                visited[adjVertex] = 1;
+                queue[rear++] = adjVertex;
+            }
+            temp = temp->next;
+        }
+    }
+
+    free(queue);
+    free(visited);
+}
+
+int main() {
+    int V, E;
+    printf("Enter number of vertices: ");
+    scanf("%d", &V);
+
+    struct Graph* graph = createGraph(V);
+
+    printf("Enter number of edges: ");
+    scanf("%d", &E);
+
+    for (int i = 0; i < E; ++i) {
+        int src, dest;
+        printf("Enter edge (source destination): ");
+        scanf("%d %d", &src, &dest);
+        addEdge(graph, src, dest);
+        addEdge(graph, dest, src);
+    }
+
+    int start;
+    printf("Enter starting vertex for BFS: ");
+    scanf("%d", &start);
+
+    printf("BFS traversal starting from vertex %d: ", start);
+    bfs(graph, start);
+
+    return 0;
+}
+
+
+
+
+
+//2nd code...
+
+
+
+#include<stdio.h>
+#include<stdlib.h>
+#include<stdbool.h>
+
+struct Node {
+    int data;
+    struct Node* next;
+};
+
+struct Graph {
+    int V;
+    struct Node** adj;
+};
+
+struct Node* createNode(int d) {
+    struct Node* n = (struct Node*)malloc(sizeof(struct Node));
+    n->data = d;
+    n->next = NULL;
+    return n;
+}
+
+struct Graph* createGraph(int vert) {
+    struct Graph* gr = (struct Graph*)malloc(sizeof(struct Graph));
+    gr->adj = (struct Node**)malloc(vert * sizeof(struct Node*));
+    gr->V = vert;
+    
+    for(int i = 0; i < vert; i++) {
+        gr->adj[i] = NULL;
+    }
+    return gr;
+}
+
+void addNode(int s, int d, struct Graph* g) {
+    // Add edge from s to d
+    struct Node* newNode = createNode(d);
+    newNode->next = g->adj[s];
+    g->adj[s] = newNode;
+    
+    // Add edge from d to s
+    newNode = createNode(s);
+    newNode->next = g->adj[d];
+    g->adj[d] = newNode;
+}
+
+int BFS(struct Graph* g, int V, int src, int dest) {
+    if(src == dest) {
+        printf("%d ", src);
+        return 0;
+    }
+    
+    bool visited[V];
+    int parent[V];
+    for(int i = 0; i < V; i++) {
+        visited[i] = false;
+        parent[i] = -1;
+    }
+    
+    // Create queue
+    int queue[V];
+    int front = 0, rear = 0;
+    
+    // Enqueue source
+    visited[src] = true;
+    queue[rear++] = src;
+    
+    bool found = false;
+    
+    // Standard BFS
+    while(front < rear && !found) {
+        int current = queue[front++];
+        
+        // Check all adjacent vertices
+        struct Node* temp = g->adj[current];
+        while(temp != NULL) {
+            int adjVertex = temp->data;
+            
+            if(!visited[adjVertex]) {
+                visited[adjVertex] = true;
+                parent[adjVertex] = current;
+                queue[rear++] = adjVertex;
+                
+                if(adjVertex == dest) {
+                    found = true;
+                    break;
+                }
+            }
+            temp = temp->next;
+        }
+    }
+    
+    if(!found) {
+        return -1;
+    }
+    
+    // Print path using parent array
+    int path[V];
+    int pathLen = 0;
+    int current = dest;
+    
+    while(current != -1) {
+        path[pathLen++] = current;
+        current = parent[current];
+    }
+    
+    // Print path in correct order (from source to destination)
+    for(int i = pathLen - 1; i >= 0; i--) {
+        printf("%d ", path[i]);
+    }
+    
+    return 0;
+}
+
+int main() {
+    int V, E;
+    printf("Enter number of vertices and edges: ");
+    scanf("%d %d", &V, &E);
+    
+    struct Graph* g = createGraph(V);
+    
+    printf("Enter %d edges (source destination):\n", E);
+    for(int i = 0; i < E; i++) {
+        int src, dest;
+        scanf("%d %d", &src, &dest);
+        if(src >= 0 && src < V && dest >= 0 && dest < V) {
+            addNode(src, dest, g);
+        } else {
+            printf("Invalid vertex! Vertices should be between 0 and %d\n", V-1);
+            i--;
+        }
+    }
+    
+    int source, desti;
+    printf("\nEnter source and destination for BFS: ");
+    scanf("%d %d", &source, &desti);
+    
+    if(source >= 0 && source < V && desti >= 0 && desti < V) {
+        if(BFS(g, V, source, desti) == -1) {
+            printf("\nPath not found from %d to %d\n", source, desti);
+        }
+    } else {
+        printf("Invalid source or destination vertices!\n");
+    }
+   
+    
+    return 0;
+}

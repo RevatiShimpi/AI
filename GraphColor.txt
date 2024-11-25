@@ -1,0 +1,109 @@
+
+#include <stdio.h>
+#include <stdlib.h>
+#include<stdbool.h>
+
+#define V 6
+
+struct Node {
+    int data;
+    struct Node* next;
+};
+
+struct Graph {
+    struct Node** adj;
+};
+
+struct Node* createNode(int val) {
+    struct Node* n = (struct Node*)malloc(sizeof(struct Node));
+    n->data = val;
+    n->next = NULL;
+    return n;
+}
+
+struct Graph* creategraph() {
+    struct Graph* g = (struct Graph*)malloc(sizeof(struct Graph));
+    g->adj = (struct Node**)malloc(V * sizeof(struct Node*));
+    for (int i = 0; i < V; ++i){
+        g->adj[i]=NULL;
+    }
+        
+    return g;
+}
+
+void addEdge(struct Graph* g, int src, int dest) {
+    struct Node* s=createNode(src);
+    struct Node* d=createNode(dest);
+    s->next=g->adj[dest];
+    g->adj[dest]=s;
+    d->next=g->adj[src];
+    g->adj[src]=d;
+    
+}
+
+bool isSafe(struct Graph* g,int ver,int color[],int c){
+    struct Node* temp=g->adj[ver];
+    while(temp!=NULL){
+        if(color[temp->data]==c){
+            return false;
+        }
+        temp=temp->next;
+    }
+    return true;
+}
+
+int colorgraph(struct Graph* g,int s,int color[],int col){
+    if(s==V){
+        return 1;
+    }
+    
+    for(int i=1;i<col;i++){
+        if(isSafe(g,s,color,i)){
+            color[s]=i;
+            if(colorgraph(g,s+1,color,col)){
+                return 1;
+            }
+            color[s]=0;
+        }
+    }
+    return 0;
+}
+
+
+int main() {
+    int color[V] = {0};
+    int col;
+    printf("Enter number of colors: ");
+    scanf("%d", &col);
+    struct Graph* g = creategraph();
+    int edge;
+    printf("Enter number of edges: ");
+    scanf("%d", &edge);
+    
+    int src, dest;
+    int i = 0;
+    printf("Enter edges \n");
+    while (i < edge) {
+        scanf("%d %d", &src, &dest);
+        addEdge(g, src, dest);
+        i++;
+    }
+
+    if (colorgraph(g, 0, color, col)) {
+        printf("\nGraph colored with %d colors:\n", col);
+        for (int i = 0; i < V; i++) {
+            printf("Vertex %d: Color %d\n", i, color[i]);
+        }
+    } else {
+        printf("Graph cannot be colored with %d colors.\n", col);
+    }
+
+    return 0;
+}
+
+
+
+
+
+
+

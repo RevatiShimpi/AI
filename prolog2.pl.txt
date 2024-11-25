@@ -1,0 +1,31 @@
+% Facts
+
+% Parent relationships
+parent(john, mary).
+parent(john, tom).
+parent(susan, mary).
+parent(susan, tom).
+parent(mary, alice).
+parent(mary, bob).
+parent(tom, charlie).
+
+
+male(john).
+male(tom).
+male(bob).
+male(charlie).
+female(susan).
+female(mary).
+female(alice).
+
+% Rules
+
+sibling(X, Y) :- parent(P, X), parent(P, Y), X \= Y.
+
+grandparent(GP, GC) :- parent(GP, P), parent(P, GC).
+
+mother(M, C) :- parent(M, C), female(M).
+
+father(F, C) :- parent(F, C), male(F).
+
+

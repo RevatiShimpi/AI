@@ -1,0 +1,164 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdbool.h>
+#include <limits.h>
+
+#define MAX_NODES 100
+#define INF INT_MAX
+
+typedef struct {
+    int node;
+    int cost;
+} Node;
+
+typedef struct {
+    Node adj[MAX_NODES];
+    int size;
+} Graph;
+
+Graph graph[MAX_NODES];
+bool visited[MAX_NODES];
+int heuristic[MAX_NODES]; // Heuristic values for each node
+int parent[MAX_NODES];    // To track the path
+
+// Priority Queue (Min-Heap) for Best-First Search
+typedef struct {
+    int node;
+    int cost;
+} PQNode;
+
+PQNode pq[MAX_NODES];
+int pq_size = 0;
+
+void push(int node, int cost) {
+    pq[pq_size].node = node;
+    pq[pq_size].cost = cost;
+    int i = pq_size++;
+    
+    // Heapify up
+    while (i > 0) {
+        int parent_idx = (i - 1) / 2;
+        if (pq[i].cost < pq[parent_idx].cost) {
+            PQNode temp = pq[i];
+            pq[i] = pq[parent_idx];
+            pq[parent_idx] = temp;
+            i = parent_idx;
+        } else {
+            break;
+        }
+    }
+}
+
+PQNode pop() {
+    PQNode min = pq[0];
+    pq[0] = pq[--pq_size];
+    
+    // Heapify down
+    int i = 0;
+    while (2 * i + 1 < pq_size) {
+        int child = 2 * i + 1;
+        if (child + 1 < pq_size && pq[child + 1].cost < pq[child].cost) {
+            child++;
+        }
+        if (pq[i].cost > pq[child].cost) {
+            PQNode temp = pq[i];
+            pq[i] = pq[child];
+            pq[child] = temp;
+            i = child;
+        } else {
+            break;
+        }
+    }
+    
+    return min;
+}
+
+bool is_empty() {
+    return pq_size == 0;
+}
+
+void add_edge(int src, int dest, int cost) {
+    graph[src].adj[graph[src].size].node = dest;
+    graph[src].adj[graph[src].size].cost = cost;
+    graph[src].size++;
+}
+
+void print_path(int start, int goal) {
+    if (start == goal) {
+        printf("%d", start);
+        return;
+    }
+    if (parent[goal] == -1) {
+        printf("No path from %d to %d\n", start, goal);
+        return;
+    }
+    print_path(start, parent[goal]);
+    printf(" -> %d", goal);
+}
+
+void best_first_search(int start, int goal) {
+    for (int i = 0; i < MAX_NODES; i++) {
+        visited[i] = false;
+        parent[i] = -1; // Initialize parent array
+    }
+    
+    push(start, heuristic[start]);
+    
+    while (!is_empty()) {
+        PQNode current = pop();
+        int u = current.node;
+        
+        if (u == goal) {
+            printf("Path from %d to %d: ", start, goal);
+            print_path(start, goal);
+            printf("\n");
+            return;
+        }
+        
+        if (visited[u]) continue;
+        visited[u] = true;
+        
+        for (int i = 0; i < graph[u].size; i++) {
+            int v = graph[u].adj[i].node;
+            if (!visited[v]) {
+                int priority = heuristic[v];
+                parent[v] = u; // Set parent for path reconstruction
+                push(v, priority);
+            }
+        }
+    }
+    
+    printf("No path found from %d to %d\n", start, goal);
+}
+
+int main() {
+    int num_nodes, num_edges;
+    printf("Enter number of nodes: ");
+    scanf("%d", &num_nodes);
+    
+    printf("Enter heuristic values for each node:\n");
+    for (int i = 0; i < num_nodes; i++) {
+        printf("Heuristic for node %d: ", i);
+        scanf("%d", &heuristic[i]);
+    }
+    
+    printf("Enter number of edges: ");
+    scanf("%d", &num_edges);
+    
+    for (int i = 0; i < num_edges; i++) {
+        int src, dest, cost;
+        printf("Enter edge (src dest cost): ");
+        scanf("%d %d %d", &src, &dest, &cost);
+        add_edge(src, dest, cost);
+    }
+    
+    int start, goal;
+    printf("Enter start node: ");
+    scanf("%d", &start);
+    printf("Enter goal node: ");
+    scanf("%d", &goal);
+    
+    best_first_search(start, goal);
+    
+    return 0;
+}
